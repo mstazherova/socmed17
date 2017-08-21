@@ -34,7 +34,7 @@ class CustomStreamListener(tweepy.StreamListener):
             writer = csv.writer(outfile, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
             old_date = new_date
         try:
-            lang = langid.classify(status.text)[0];
+            lang = langid.classify(status.text)[0]
             if lang == "en":
                 writer.writerow((status.created_at, status.id_str, status.text))
         except Exception as e:
@@ -63,12 +63,14 @@ logfile.write(localtime + " Tracking terms from ../twython-keywords.txt\nStartin
 # longer timeout to keep SSL connection open even when few tweets are coming in
 stream = tweepy.streaming.Stream(auth, CustomStreamListener(), timeout=1000.0)
 
-terms = [line.strip() for line in open('twython-keywords.txt')]
-
 # open output file
 old_date = date.today()
 outfile = codecs.open("tweets-" + str(old_date) + ".txt", "ab", "utf-8")
 writer = csv.writer(outfile, quoting=csv.QUOTE_NONNUMERIC, lineterminator='\n')
 
+# terms = [line.strip() for line in open('twython-keywords.txt')]
 # stream.filter(track=terms)
-stream.filter(track=[u"\U0001F628", u"\U0001F631", u"\U0001F60D", u"\u2764", u"\U0001F633", u"\U0001F62E"])
+# stream.filter(track=[u"\U0001F628", u"\U0001F631", u"\U0001F60D", u"\u2764", u"\U0001F633", u"\U0001F62E"])
+
+stream.filter(track=[u"\U0001F628", u"\U0001F631", u"\U0001F60D", u"\u2764", u"\U0001F633", u"\U0001F62E",
+                     u"\U0001F621", u"\U0001F620", u"\U0001F622", u"\U0001F614", u"\U0001F616", u"\U0001F922"])

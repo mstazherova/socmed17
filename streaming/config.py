@@ -23,6 +23,5 @@ LANGUAGE = 'en'
 EMOJIS = list(filter(None, [is_valid(e) for e in raw_emojis]))
 
 
-
 DOWNLOADED_TWEETS_PATH = 'emoji_twitter_data.txt'
 SENTRY_DSN = ''
