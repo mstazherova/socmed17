@@ -7,7 +7,8 @@ import tweepy
 import langid
 import csv
 import codecs
-from config import TwitterAuth, EMOJIS
+from config import TwitterAuth
+# from config import EMOJIS
 
 import time
 from datetime import date

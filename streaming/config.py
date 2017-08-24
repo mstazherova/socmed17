@@ -1,6 +1,5 @@
 from emoji.unicode_codes import UNICODE_EMOJI
 
-
 class TwitterAuth:
     CONSUMER_KEY = 'Og9EHMrtpgHs8WJRZlsYA25rZ'
     CONSUMER_SECRET = 'psdfATmllw8pnUJYineEEIYK1pJIdWAqUdCvasYNfVB6u7rtCg'
