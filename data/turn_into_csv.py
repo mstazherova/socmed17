@@ -2,6 +2,7 @@ import re
 
 tweets = []
 
+
 with open('sample_tweets.txt', encoding="utf-8") as fp:
     for line in fp:
         tweets.append(line)
@@ -20,6 +21,11 @@ for element in tweets:
     tweet = re.sub("RT : ", '', tweet)
     # filter out links
     tweet = re.sub("(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?", '', tweet)
-    # filter out non-ascii characters
-    tweet = re.sub("[^\x00-\x7f]", '', tweet)
+    # filter out non-ascii characters but leaving emojis
+    emoji_pat = '[\U0001F300-\U0001F64F\U0001F680-\U0001F6FF\u2600-\u26FF\u2700-\u27BF]'
+    reg = re.compile(r'({})|[^\x00-\x7F]'.format(emoji_pat)) # from non-ascii chars return emojis
+    tweet = reg.sub(lambda x: '{}'.format(x.group(1)) if x.group(1) else '', tweet)
+
+
+    #tweet = re.sub("[\U0001F300-\U0001F64F\U0001F680-\U0001F6FF\u2600-\u26FF\u2700-\u27BF]", '', tweet)
     print(tweet)
