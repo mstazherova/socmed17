@@ -2,7 +2,7 @@ import re
 
 tweets = []
 
-with open('sample_tweets.txt') as fp:
+with open('sample_tweets.txt', encoding="utf-8") as fp:
     for line in fp:
         tweets.append(line)
 
@@ -20,4 +20,6 @@ for element in tweets:
     tweet = re.sub("RT : ", '', tweet)
     # filter out links
     tweet = re.sub("(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?", '', tweet)
+    # filter out non-ascii characters
+    tweet = re.sub("[^\x00-\x7f]", '', tweet)
     print(tweet)
