@@ -62,11 +62,11 @@ def identify_emotions(emojis):
             emotions.append("sadness")
         if emoji_ == '😖' or emoji_ == '🤢':
             emotions.append("disgust")
-    return emotions
+    return set(emotions)
 
 
 def cleaned_up(tweet):
-    """Given a list of tweets this function does some preprocessing by removing
+    """Given a tweet, this function does some preprocessing by removing
     noise.
 
     Example:
@@ -110,6 +110,7 @@ for tweet in tweets:
     #print(tweet)
     clean_tweet, emojis = extract_emojis(cleaned_up(tweet))
     emotions = identify_emotions(emojis)
-    #print(clean_tweet)
-    #print(emotions)
+    print(clean_tweet)
+    print(emotions)
+    print()
 
