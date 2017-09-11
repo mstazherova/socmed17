@@ -1,5 +1,13 @@
+# Python 3.6
+# Authors: Maximilian Seidler, Mariia Stazherova
+# Reads raw Twitter streaming data and collects it in a CSV-file
+
 import re
 import emoji
+import csv
+import time
+import glob
+from collections import Counter
 
 
 def contains_target_emoji(tweet):
@@ -13,8 +21,7 @@ def contains_target_emoji(tweet):
 
 def make_tweet_list(filepath):
     """Given a file-path this function identifies the the boundaries of a tweet
-    and makes an array with each element being a tweet."""
-
+    and makes a list with each element being a tweet."""
     tweets = []
     with open(filepath, encoding='UTF-8') as fp:
         current = ''
@@ -33,38 +40,6 @@ def make_tweet_list(filepath):
     return tweets[1:]
 
 
-def extract_emojis(tweet):
-    """Searches for emoji characters in a string and removes them.
-    Returns a (string, emojis) tuple."""
-
-    emojis = list(c for c in tweet if c in emoji.UNICODE_EMOJI)
-    for emoji_ in emojis:
-        tweet = tweet.replace(emoji_ + ' ', '')
-
-    return (tweet, emojis)
-
-
-def identify_emotions(emojis):
-    """Given a list of emojis it identifies the corresponding emotion.
-    Returns a list of strings."""
-
-    emotions = []
-    for emoji_ in set(emojis):
-        if emoji_ == '😨' or emoji_ == '😱':
-            emotions.append("fear")
-        if emoji_ == '😍' or emoji_ == '❤':
-            emotions.append("happiness")
-        if emoji_ == '😳' or emoji_ == '😮':
-            emotions.append("surprise")
-        if emoji_ == '😡' or emoji_ == '😠':
-            emotions.append("anger")
-        if emoji_ == '😢' or emoji_ == '😔':
-            emotions.append("sadness")
-        if emoji_ == '😖' or emoji_ == '🤢':
-            emotions.append("disgust")
-    return set(emotions)
-
-
 def cleaned_up(tweet):
     """Given a tweet, this function does some preprocessing by removing
     noise.
@@ -78,7 +53,6 @@ def cleaned_up(tweet):
 
         "RT if you wouldn't mind being stuck in between 😍 tushy"
     """
-
     # find 18 digit user_id...
     user_id = re.findall(r"(\d{18})", tweet)
     # to filter out date and user_id
@@ -105,12 +79,74 @@ def cleaned_up(tweet):
     return tweet
 
 
-tweets = make_tweet_list('sample_tweets.txt')
-for tweet in tweets:
-    #print(tweet)
-    clean_tweet, emojis = extract_emojis(cleaned_up(tweet))
-    emotions = identify_emotions(emojis)
-    print(clean_tweet)
-    print(emotions)
-    print()
+def extract_emojis(tweet):
+    """Searches for emoji characters in a string and removes them.
+    Returns a (string, emojis) tuple."""
+    emojis = list(c for c in tweet if c in emoji.UNICODE_EMOJI)
+    for emoji_ in emojis:
+        tweet = tweet.replace(emoji_, '')
 
+    return (tweet, emojis)
+
+
+def identify_emotions(emojis):
+    """Given a list of emojis it identifies the corresponding emotion.
+    Returns a list of strings."""
+    emotions = set()
+    for emoji_ in set(emojis):
+        if emoji_ == '😨' or emoji_ == '😱':
+            emotions.add("fear")
+        if emoji_ == '😍' or emoji_ == '❤':
+            emotions.add("happiness")
+        if emoji_ == '😳' or emoji_ == '😮':
+            emotions.add("surprise")
+        if emoji_ == '😡' or emoji_ == '😠':
+            emotions.add("anger")
+        if emoji_ == '😢' or emoji_ == '😔':
+            emotions.add("sadness")
+        if emoji_ == '😖' or emoji_ == '🤢':
+            emotions.add("disgust")
+    return list(emotions)
+
+
+def write_to_csv(tweets):
+    """Given a list of raw tweets, this function creates a csv-file and
+    writes per row the corresponding emotion and the (cleaned up) tweet."""
+    csvfile = open('corpus.csv', 'a')
+    corpuswriter = csv.writer(csvfile, delimiter=';')
+    for tweet in tweets:
+        clean_tweet, emojis = extract_emojis(cleaned_up(tweet))
+        emotions = identify_emotions(emojis)
+        for emotion in emotions:
+            corpuswriter.writerow([emotion, clean_tweet])
+    csvfile.close()
+
+
+def data_collector():
+    """This function looks in the for raw streaming data in the '/streaming'
+    directory and passes thoses file paths to other functions."""
+    start_time = time.time()
+    for filepath in glob.glob('../streaming/tweets*.txt'):
+        print("Writing the tweets from {} into the corpus.csv".format(filepath))
+        tweets = make_tweet_list(filepath)
+        write_to_csv(tweets)
+    print("Corpus-building completed in {0:.2f} seconds".format((time.time() - start_time)))
+
+
+def give_emotion_frequency():
+    """This helper function prints out the frequencies of the six emotions in
+    our corpus."""
+    emotions_list = []
+    with open('corpus.csv') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter=';')
+        for row in csvreader:
+            emotions_list.append(row[0])
+
+    c = Counter(emotions_list)
+    csvfile.close()
+    return c.most_common()
+
+
+if __name__ == "__main__":
+    data_collector()
+    print(give_emotion_frequency())
