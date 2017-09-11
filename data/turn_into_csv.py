@@ -127,13 +127,13 @@ def data_collector():
     directory and passes thoses file paths to other functions."""
     start_time = time.time()
     for filepath in glob.glob('../streaming/tweets*.txt'):
-        print("Writing the tweets from {} into the corpus.csv".format(filepath))
+        print("Writing the tweets in {} into 'corpus.csv'".format(filepath))
         tweets = make_tweet_list(filepath)
         write_to_csv(tweets)
     print("Corpus-building completed in {0:.2f} seconds".format((time.time() - start_time)))
 
 
-def give_emotion_frequency():
+def print_emotion_frequency():
     """This helper function prints out the frequencies of the six emotions in
     our corpus."""
     emotions_list = []
@@ -144,9 +144,9 @@ def give_emotion_frequency():
 
     c = Counter(emotions_list)
     csvfile.close()
-    return c.most_common()
+    print(c.most_common())
 
 
 if __name__ == "__main__":
     data_collector()
-    print(give_emotion_frequency())
+    print_emotion_frequency()
