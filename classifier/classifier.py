@@ -1,5 +1,5 @@
 # Python 3.6
-# Authors: Maximilian Seidler, Mariia Stazherova
+# Author: Maximilian Seidler
 # Reads CSV-file and performs various classifications
 
 import csv

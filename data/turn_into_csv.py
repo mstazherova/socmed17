@@ -1,5 +1,5 @@
 # Python 3.6
-# Authors: Maximilian Seidler, Mariia Stazherova
+# Author: Maximilian Seidler
 # Reads raw Twitter streaming data and collects it in a CSV-file
 
 import re
