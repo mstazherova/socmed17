@@ -29,6 +29,7 @@ def make_tweet_list(filepath):
             # if a user id is found...
             if re.findall(r"(\d{18})", line):
                 # ...we are at the beginning of a new tweet
+                # and can add the previous one to the list
                 previous = current
                 current = line
                 if contains_target_emoji(previous):
@@ -65,17 +66,17 @@ def cleaned_up(tweet):
     tweet = re.sub("(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?", '', tweet)
     # remove '#' form hashtags
     tweet = re.sub("#", '', tweet)
-    # remove '&amp';
+    # remove '&amp;'
     tweet = re.sub("&amp;", '', tweet)
     # filter out non-ascii characters but leaving emojis
     emoji_pat = '[\U0001F300-\U0001F64F\U0001F680 - \U0001F6FF\u2600-\u26FF\u2700-\u27BF]'
     reg = re.compile(r'({})|[^\x00-\x7F]'.format(emoji_pat))  # from non-ascii chars return emojis
     tweet = reg.sub(lambda x: '{}'.format(x.group(1)) if x.group(1) else '', tweet)
-    # remove beginning and ending quotations marks
+    # remove beginning and ending quotations marks as well as the ending newline character
     tweet = tweet[1:-2]
     # remove extra whitespace
     tweet = ' '.join(tweet.split())
-    # remove newline at the end of tweet and return clean tweet
+    # return clean tweet
     return tweet
 
 
