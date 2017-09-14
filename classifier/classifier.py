@@ -11,6 +11,8 @@ from sklearn.feature_extraction.text import TfidfTransformer
 
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import roc_auc_score
+from sklearn.metrics import f1_score
+
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import LinearSVC
 from sklearn.tree import DecisionTreeClassifier
@@ -41,7 +43,8 @@ def read_data(filepath):
             X.append(row[1:][0])
             counter += 1
             # limit data for testing
-            if debug and counter == 20000:
+            if debug and counter == 100000:
+                print(counter)
                 break
     return (X, y)
 
@@ -63,7 +66,7 @@ def print_emotion_ratio(y):
     c = Counter(y)
     print("Label distribution in the data:")
     for emotion, frequency in c.most_common():
-        print("\t{}: {} ({:.2f}%)".format(emotion, frequency, frequency / len(y)))
+        print("\t{}: {} ({:.2f}%)".format(emotion, frequency, frequency / len(y) * 100))
     print()
 
 
@@ -85,9 +88,10 @@ def train_and_evaluate(X_train, y_train, X_test, y_test, classifiers):
     for clf in classifiers:
         start_time = time.time()
         clf.fit(X_train, y_train)
-        print("\tTraining of {} completed in {:.2f} seconds".format(type(clf).__name__, time.time() - start_time))
+        print("Training of {} completed in {:.2f} seconds".format(type(clf).__name__, time.time() - start_time))
         # print("AUC score: {}".format(roc_auc_score(y_test, clf.decision_function(X_test))))
-        print("\t\tAccuracy: {:.2f}".format(clf.score(X_test, y_test)))
+        print("F1-score: {:.2f}".format(f1_score(y_test, clf.predict(X_test), average='weighted')))
+        # print("Accuracy: {:.2f}".format(clf.score(X_test, y_test)))
 
 
 # def cross_validated_scores(X, y, classifiers):
@@ -95,7 +99,7 @@ def train_and_evaluate(X_train, y_train, X_test, y_test, classifiers):
 #         start_time = time.time()
 #         print("{}".format(type(clf).__name__))
 #
-#         print("Cross-validated f1_weighted: {:.2f} (finised in {:.2f} seconds)"
+#         print("Cross-validated f1_weighted: {:.2f} (finished in {:.2f} seconds)"
 #               .format(cross_val_score(clf, X, y, cv=5, scoring='f1_weighted').mean(),
 #                       time.time() - start_time))
 #         print()
