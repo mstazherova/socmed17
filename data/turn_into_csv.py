@@ -1,5 +1,5 @@
 # Python 3.6
-# Authors: Maximilian Seidler, Mariia Stazherova
+# Author: Maximilian Seidler
 # Reads raw Twitter streaming data and collects it in a CSV-file
 
 import re
@@ -29,6 +29,7 @@ def make_tweet_list(filepath):
             # if a user id is found...
             if re.findall(r"(\d{18})", line):
                 # ...we are at the beginning of a new tweet
+                # and can add the previous one to the list
                 previous = current
                 current = line
                 if contains_target_emoji(previous):
@@ -65,17 +66,17 @@ def cleaned_up(tweet):
     tweet = re.sub("(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?", '', tweet)
     # remove '#' form hashtags
     tweet = re.sub("#", '', tweet)
-    # remove '&amp';
+    # remove '&amp;'
     tweet = re.sub("&amp;", '', tweet)
     # filter out non-ascii characters but leaving emojis
     emoji_pat = '[\U0001F300-\U0001F64F\U0001F680 - \U0001F6FF\u2600-\u26FF\u2700-\u27BF]'
     reg = re.compile(r'({})|[^\x00-\x7F]'.format(emoji_pat))  # from non-ascii chars return emojis
     tweet = reg.sub(lambda x: '{}'.format(x.group(1)) if x.group(1) else '', tweet)
-    # remove beginning and ending quotations marks
+    # remove beginning and ending quotations marks as well as the ending newline character
     tweet = tweet[1:-2]
     # remove extra whitespace
     tweet = ' '.join(tweet.split())
-    # remove newline at the end of tweet and return clean tweet
+    # return clean tweet
     return tweet
 
 
@@ -122,12 +123,12 @@ def write_to_csv(tweets):
     csvfile.close()
 
 
-def data_collector():
+def collect_data():
     """This function looks in the for raw streaming data in the '/streaming'
     directory and passes thoses file paths to other functions."""
     start_time = time.time()
     for filepath in glob.glob('../streaming/tweets*.txt'):
-        print("Writing the tweets in {} into 'corpus.csv'".format(filepath))
+        print("Writing tweets in {} into 'corpus.csv'".format(filepath))
         tweets = make_tweet_list(filepath)
         write_to_csv(tweets)
     print("Corpus-building completed in {0:.2f} seconds".format((time.time() - start_time)))
@@ -147,6 +148,21 @@ def print_emotion_frequency():
     print(c.most_common())
 
 
+def print_emotion_ratio():
+    """Print frequency and ratio of each of the labels (emotions) in the data."""
+    emotions_list = []
+    with open('corpus.csv') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter=';')
+        for row in csvreader:
+            emotions_list.append(row[0])
+
+    c = Counter(emotions_list)
+    print("Label distribution in the data:")
+    for emotion, frequency in c.most_common():
+        print("* {}: {} ({:.2f}%)".format(emotion, frequency,
+                                          frequency / len(emotions_list) * 100))
+
+
 if __name__ == "__main__":
-    data_collector()
-    print_emotion_frequency()
+    collect_data()
+    print_emotion_ratio()
