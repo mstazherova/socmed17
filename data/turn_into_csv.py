@@ -123,12 +123,12 @@ def write_to_csv(tweets):
     csvfile.close()
 
 
-def data_collector():
+def collect_data():
     """This function looks in the for raw streaming data in the '/streaming'
     directory and passes thoses file paths to other functions."""
     start_time = time.time()
     for filepath in glob.glob('../streaming/tweets*.txt'):
-        print("Writing the tweets in {} into 'corpus.csv'".format(filepath))
+        print("Writing tweets in {} into 'corpus.csv'".format(filepath))
         tweets = make_tweet_list(filepath)
         write_to_csv(tweets)
     print("Corpus-building completed in {0:.2f} seconds".format((time.time() - start_time)))
@@ -148,6 +148,21 @@ def print_emotion_frequency():
     print(c.most_common())
 
 
+def print_emotion_ratio():
+    """Print frequency and ratio of each of the labels (emotions) in the data."""
+    emotions_list = []
+    with open('corpus.csv') as csvfile:
+        csvreader = csv.reader(csvfile, delimiter=';')
+        for row in csvreader:
+            emotions_list.append(row[0])
+
+    c = Counter(emotions_list)
+    print("Label distribution in the data:")
+    for emotion, frequency in c.most_common():
+        print("* {}: {} ({:.2f}%)".format(emotion, frequency,
+                                          frequency / len(emotions_list) * 100))
+
+
 if __name__ == "__main__":
-    data_collector()
-    print_emotion_frequency()
+    collect_data()
+    print_emotion_ratio()
