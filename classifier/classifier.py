@@ -1,36 +1,36 @@
 # Python 3.6
-# Author: Maximilian Seidler
+# Authors: Maximilian Seidler, Mariia Stazherova
 # Reads CSV-file and performs various sentiment classifications
 
+import csv
+import time
 import itertools
 import numpy as np
 import matplotlib.pyplot as plt
-import csv
-import time
 from collections import Counter
-from sklearn.model_selection import train_test_split
+
+# data processing
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.model_selection import train_test_split
 
-from sklearn.model_selection import cross_val_score
-from sklearn.metrics import roc_auc_score
-from sklearn.metrics import f1_score
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import classification_report
-
+# classification
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.svm import LinearSVC
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import VotingClassifier
+from sklearn.ensemble import RandomForestClassifier  # not used in final version
+
+# evaluation
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
 
 
 # Used classification algorithms for sentiment analysis
 clf_list = [MultinomialNB(),
             LinearSVC(),
             LogisticRegression(random_state=42)
-            #RandomForestClassifier(criterion='entropy', n_estimators=5)
+            # RandomForestClassifier(criterion='entropy', n_estimators=5)
             ]
 
 
@@ -39,18 +39,11 @@ def read_data(filepath):
     labels 'y' and returns them."""
     X = []
     y = []
-    debug = True
-    counter = 0
     with open(filepath, encoding='UTF-8') as csvfile:
         csvreader = csv.reader(csvfile, delimiter=';')
         for row in csvreader:
             y.append(row[0])
             X.append(row[1:][0])
-            counter += 1
-            # limit data for testing
-            if debug and counter == 100000:
-                print(counter)
-                break
     return (X, y)
 
 
@@ -66,8 +59,7 @@ def vectorize_data(X):
 
 
 def print_emotion_ratio(y):
-    """This funciton prints the frequency and ratio of each of the labels
-    (emotions) in the data."""
+    """Print frequency and ratio of each of the labels (emotions) in the data."""
     c = Counter(y)
     print("Label distribution in the data:")
     for emotion, frequency in c.most_common():
@@ -87,38 +79,8 @@ def essemble_classifier():
     return [VotingClassifier(list(zip(clf_names, clf_list)))]
 
 
-def train_and_evaluate(X_train, y_train, X_test, y_test, classifiers):
-    """Given a list of classifiers, this function trains each classifier with a
-    training set and evaluates it with a test set."""
-
-    for clf in classifiers:
-        start_time = time.time()
-        clf.fit(X_train, y_train)
-        y_pred = clf.predict(X_test)
-        print("Training of {} completed in {:.2f} seconds".format(type(clf).__name__, time.time() - start_time))
-        #print("AUC score: {}".format(roc_auc_score(y_test, clf.decision_function(X_test))))
-        print("F1-score: {:.2f}".format(f1_score(y_test, y_pred, average='weighted')))
-        # print("Accuracy: {:.2f}".format(clf.score(X_test, y_test)))
-        print(classification_report(y_test, y_pred, target_names=list(set(y))))
-
-        # Compute confusion matrix
-        cnf_matrix = confusion_matrix(y_test, y_pred)
-        # Print and plot confusion matrix
-        plt.figure()
-        plot_confusion_matrix(cnf_matrix, classes= set(y),
-                              title='Confusion matrix '+str(type(clf).__name__))
-
-
-def plot_confusion_matrix(cm, classes,
-                          title='Confusion matrix',
-                          cmap=plt.cm.Greens):
-    """
-    This function prints and plots the confusion matrix
-    without normalization and with some fancy stuff
-    """
-    print('Confusion matrix')
-    print(cm)
-
+def plot_confusion_matrix(cm, classes, title='Confusion matrix', cmap=plt.cm.Greens):
+    """Prints and plots the confusion matrix without normalization."""
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
@@ -126,12 +88,11 @@ def plot_confusion_matrix(cm, classes,
     plt.xticks(tick_marks, classes, rotation=45)
     plt.yticks(tick_marks, classes)
 
-    # fancy coloring part, the higher the number - the saturated the color
+    # coloring (the higher the number, the more saturated the color)
     fmt = 'd'
     thresh = cm.max() / 2.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-        plt.text(j, i, format(cm[i, j], fmt),
-                 horizontalalignment="center",
+        plt.text(j, i, format(cm[i, j], fmt), horizontalalignment="center",
                  color="white" if cm[i, j] > thresh else "black")
 
     plt.tight_layout()
@@ -140,15 +101,26 @@ def plot_confusion_matrix(cm, classes,
     plt.xlabel('Predicted label')
 
 
-# def cross_validated_scores(X, y, classifiers):
-#     for clf in classifiers:
-#         start_time = time.time()
-#         print("{}".format(type(clf).__name__))
-#
-#         print("Cross-validated f1_weighted: {:.2f} (finished in {:.2f} seconds)"
-#               .format(cross_val_score(clf, X, y, cv=5, scoring='f1_weighted').mean(),
-#                       time.time() - start_time))
-#         print()
+def train_and_evaluate(X_train, y_train, X_test, y_test, classifiers):
+    """Given a list of classifiers, this function trains each classifier with a
+    training set and evaluates it with a test set."""
+    for clf in classifiers:
+        # train classifier
+        start_time = time.time()
+        clf.fit(X_train, y_train)
+        print("Training of {} completed in {:.2f} seconds"
+              .format(type(clf).__name__, time.time() - start_time))
+
+        # evaluate classifier
+        y_pred = clf.predict(X_test)
+        print("Evaluation:\t\t\t  accuracy\n\t\t\t\t    {:6.2f}\n".format(clf.score(X_test, y_test)))
+        print(classification_report(y_test, y_pred, target_names=list(set(y_test))))
+        # compute confusion matrix
+        cnf_matrix = confusion_matrix(y_test, y_pred)
+        # plot confusion matrix
+        plt.figure()
+        plot_confusion_matrix(cnf_matrix, classes=set(y_test),
+                              title='Confusion matrix ' + str(type(clf).__name__))
 
 
 if __name__ == "__main__":
@@ -169,10 +141,6 @@ if __name__ == "__main__":
     train_and_evaluate(X_train, y_train, X_test, y_test, clf_list)
     # train and evaluate with an essemble method (using all of the classifiers)
     train_and_evaluate(X_train, y_train, X_test, y_test, essemble_classifier())
-
-    # cross_validated_scores(X, y, clf_list)
-    # cross_validated_scores(X, y, essemble_classifier())
-
-    # actually show all the figures
+    print("Evalution complete. Plotting confusion matrices...")
+    # show all figures
     plt.show()
-
